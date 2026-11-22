@@ -52,7 +52,6 @@ class BasicBlock_pruned(nn.Module):
 
         shortcut_out = self.downsample(x)
 
-        # ← اصلاح اصلی: انتقال indices به device ورودی
         indices = torch.where(self.masks[1] == 1)[0].to(x.device)
 
         padded_out = torch.index_copy(torch.zeros_like(shortcut_out), 1, indices, out)
