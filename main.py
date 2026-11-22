@@ -14,7 +14,6 @@ import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#from metrics_utils import plot_roc_and_f1
 from dataset_utils import (
     UADFVDataset, CustomGenAIDataset, NewGenAIDataset,
     create_dataloaders, get_sample_info
@@ -157,7 +156,7 @@ def final_evaluation_unified(model, test_loader, device, save_dir, model_names, 
     cm_path = os.path.join(save_dir, 'confusion_matrix.png')
     plt.savefig(cm_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Confusion Matrix saved to: {cm_path}")
+    print(f"Confusion Matrix saved to: {cm_path}")
     
     print(f"\n{'='*70}")
     print("FINAL RESULTS")
@@ -265,7 +264,7 @@ def final_evaluation_unified(model, test_loader, device, save_dir, model_names, 
     log_path = os.path.join(save_dir, 'prediction_log.txt')
     with open(log_path, 'w') as f:
         f.write("\n".join(output_str))
-    print(f"✅ Prediction log saved to: {log_path}")
+    print(f"Prediction log saved to: {log_path}")
 
     # ────────────────────────────────────────────────────────────────
     # ────────────────────────────────────────────────────────────────
@@ -307,7 +306,6 @@ def final_evaluation_unified(model, test_loader, device, save_dir, model_names, 
         args.dataset, is_main=True)
 
     return acc, y_true_np, y_score_np
-
 
 # ================== MODEL CLASSES ==================
 class MultiModelNormalization(nn.Module):
@@ -415,7 +413,6 @@ class FuzzyHesitantEnsemble(nn.Module):
             return final_output, final_weights, all_memberships, outputs
         return final_output, final_weights
 
-
 # ================== MODEL LOADING ==================
 def load_pruned_models(model_paths: List[str], device: torch.device) -> List[nn.Module]:
     try:
@@ -442,7 +439,6 @@ def load_pruned_models(model_paths: List[str], device: torch.device) -> List[nn.
         raise ValueError("No models loaded!")
     return models
 
-
 # ================== EVALUATION FUNCTIONS ==================
 @torch.no_grad()
 def evaluate_single_model_exact(model: nn.Module, loader: DataLoader, device: torch.DeviceObjType,
@@ -466,13 +462,9 @@ def evaluate_single_model_exact(model: nn.Module, loader: DataLoader, device: to
     print(f" {name}: {acc:.2f}%")
     return acc
 
-
 @torch.no_grad()
 def evaluate_accuracy_and_loss(model, loader, device, criterion):
-    """
-     / +   routing —    loader.
-     validation  ‌  ‌    split .
-    """
+   
     model.eval()
     correct = 0
     total_loss = 0.0
@@ -701,13 +693,13 @@ def train_hesitant_fuzzy(ensemble_model, train_loader, val_loader, num_epochs, l
     curves_path = os.path.join(save_dir, 'training_curves.png')
     plt.savefig(curves_path, dpi=300, bbox_inches='tight')
     plt.close()
-    print(f"✅ Training curves (Loss & Acc) saved to: {curves_path}")
+    print(f"Training curves (Loss & Acc) saved to: {curves_path}")
 
     return best_val_acc, timing
 
 # ================== MAIN FUNCTION ==================
 def main():
-    parser = argparse.ArgumentParser(description="Optimized Fuzzy Hesitant Ensemble Training (Single GPU)")
+    parser = argparse.ArgumentParser(description="Optimized Fuzzy Hesitant Ensemble Training")
     parser.add_argument('--epochs', type=int, default=30)
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--batch_size', type=int, default=32)
