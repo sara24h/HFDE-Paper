@@ -23,7 +23,7 @@ def get_sample_info(dataset, index):
 
 # ================== GRADCAM CLASS ==================
 class GradCAM:
-    """Optimized GradCAM – FIXED gradient check & squeeze"""
+
     def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
@@ -101,7 +101,7 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
     for model in local_ensemble.models:
         model.eval()
 
-    # دریافت دیتاست اصلی
+    
     full_dataset = test_loader.dataset
     if hasattr(full_dataset, 'dataset'):
         full_dataset = full_dataset.dataset
@@ -112,11 +112,8 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
         print("No samples for visualization.")
         return
 
-    # انتخاب ایندکس‌ها
-        # انتخاب ایندکس‌ها
     vis_indices = random.sample(range(total_samples), vis_count)
     
-    # کلاس Wrapper برای اطمینان از تبدیل PIL به Tensor
     from torchvision import transforms
     class VisSubset(torch.utils.data.Dataset):
         def __init__(self, base_dataset, indices):
@@ -130,36 +127,34 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
         def __getitem__(self, i):
             global_idx = self.indices[i]
             image, label = self.base_dataset[global_idx]
-            # اگر تصویر از نوع تنسور نبود، حتماً آن را به تنسور تبدیل می‌کنیم
+        
             if not isinstance(image, torch.Tensor):
                 image = self.transform(image)
             return image, label
 
     vis_dataset = VisSubset(full_dataset, vis_indices)
     
-    # نکته مهم: num_workers را صفر بگذاریم تا شافل نشوند
+    
     vis_loader = DataLoader(vis_dataset, batch_size=1, shuffle=False, num_workers=0)
 
     for idx, (image, label_int) in enumerate(vis_loader):
         image = image.to(device)
-        
-        # --- اصلاحیه: دریافت مسیر صحیح از دیتاست اصلی با ایندکس دقیق ---
+                
         try:
-            # تلاش برای گرفتن مسیر مستقیم
+           
             if hasattr(full_dataset, 'samples'):
                 path_obj = full_dataset.samples[vis_indices[idx]]
                 img_path = path_obj[0] # path is usually the first element
                 true_label_int = path_obj[1]
-            elif hasattr(full_dataset, 'imgs'): # برای CIFAR یا دیتاست‌های خاص
+            elif hasattr(full_dataset, 'imgs'): 
                 path_obj = full_dataset.imgs[vis_indices[idx]]
                 img_path = str(path_obj[0])
                 true_label_int = path_obj[1]
             else:
-                # اگر ساختار ساده بود
+                
                 img_path = f"index_{vis_indices[idx]}"
-                true_label_int = label_int.item() # استفاده از لیبل لود شده
+                true_label_int = label_int.item() 
             
-            # اطمینان از اینکه لیبل با فایل مچ است
             true_label = int(true_label_int)
             
         except Exception as e:
@@ -173,11 +168,10 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
         with torch.no_grad():
             output, weights, _, _ = ensemble(image, return_details=True)
         
-        # پیش‌بینی نهایی
         pred_val = 1 if output.squeeze().item() > 0 else 0
         print(f"  Pred: {'real' if pred_val == 1 else 'fake'}")
 
-        # ساخت نام فایل بر اساس لیبل واقعی (که الان درست است)
+
         filename = f"sample_{idx}_true{'real' if true_label == 1 else 'fake'}_pred{'real' if pred_val == 1 else 'fake'}.png"
 
         # ---------- GradCAM ----------
@@ -186,7 +180,7 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
                 active_models = torch.where(weights[0] > 1e-4)[0].cpu().tolist()
                 combined_cam = None
                 
-                # ذخیره تصویر اصلی برای استفاده بعدی
+                
                 img_np = image[0].cpu().permute(1, 2, 0).numpy()
                 
                 for i in active_models:
@@ -199,7 +193,7 @@ def generate_visualizations(ensemble, test_loader, device, vis_dir, model_names,
                     model_out = model(x_n)
                     if isinstance(model_out, (tuple, list)):
                         model_out = model_out[0]
-                    # محاسبه اسکور بر اساس پیش‌بینی انسامبل
+                   
                     score = model_out.squeeze(0) if pred_val == 1 else -model_out.squeeze(0)  
                     cam = gradcam.generate(score)
 
